@@ -37,13 +37,30 @@ class RateLimitPlugin(base_plugin.BasePlugin):
         now = time.time()
         window = self.user_windows[user_id]
 
-        # TODO: Implement sliding window:
-        # 1. Pop timestamps older than (now - window_seconds) from the left
-        # 2. If len(window) >= max_requests:
-        #       wait = window_seconds - (now - window[0])
-        #       self.blocked_count += 1
-        #       return self._block_response(
-        #           f"Rate limit exceeded. Try again in {wait:.0f}s."
-        #       )
-        # 3. Else: append now, return None
-        raise NotImplementedError("Implement RateLimitPlugin.on_user_message_callback")
+        while window and window[0] <= now - self.window_seconds:
+            window.popleft()
+
+        if len(window) >= self.max_requests:
+            wait = self.window_seconds - (now - window[0])
+            self.blocked_count += 1
+            return self._block_response(
+                f"{RATE_LIMIT_PREFIX} Rate limit exceeded "
+                f"({self.max_requests} requests / {self.window_seconds}s). "
+                f"Try again in {wait:.0f}s."
+            )
+
+        window.append(now)
+        return None
+
+    def refund(self, user_id: str) -> None:
+        """Give back the slot of a request that failed upstream (network/429/5xx).
+
+        A retry passes through this plugin again; without a refund, server-side
+        errors would eat the user's quota and turn a safe query into a rate-limit block.
+        """
+        window = self.user_windows.get(user_id)
+        if window:
+            window.pop()
+
+
+RATE_LIMIT_PREFIX = "[BLOCKED:rate_limit]"

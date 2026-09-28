@@ -1,0 +1,25 @@
+{
+  "total_requests": 34,
+  "blocked_requests": 27,
+  "block_rate": 0.7941176470588235,
+  "rate_limit_hits": 5,
+  "judge_checks": 0,
+  "judge_fails": 0,
+  "judge_fail_rate": 0.0,
+  "redacted_responses": 0,
+  "errors": 0,
+  "alerts": [
+    {
+      "metric": "block_rate",
+      "value": 0.7941176470588235,
+      "threshold": 0.5,
+      "message": "Block rate above threshold — possible attack wave or over-blocking."
+    },
+    {
+      "metric": "rate_limit_hits",
+      "value": 5.0,
+      "threshold": 5.0,
+      "message": "Many rate-limit hits — possible flooding / cost attack."
+    }
+  ]
+}
